@@ -32,13 +32,14 @@ namespace Snake
         int score;
         //таймер по которому 
         DispatcherTimer moveTimer;
-        
+
         //конструктор формы, выполняется при запуске программы
         public MainWindow()
         {
             InitializeComponent();
-            
+
             snake = new List<PositionedEntity>();
+
             //создаем поле 300х300 пикселей
             field = new Entity(600, 600, "pack://application:,,,/Resources/snake.png");
 
@@ -46,7 +47,6 @@ namespace Snake
             moveTimer = new DispatcherTimer();
             moveTimer.Interval = new TimeSpan(0, 0, 0, 0, 300);
             moveTimer.Tick += new EventHandler(moveTimer_Tick);
-            
         }
 
         //метод перерисовывающий экран
@@ -62,7 +62,7 @@ namespace Snake
             //обновляем положение яблока
             Canvas.SetTop(apple.image, apple.y);
             Canvas.SetLeft(apple.image, apple.x);
-            
+
             //обновляем количество очков
             lblScore.Content = String.Format("{0}000", score);
         }
@@ -84,8 +84,12 @@ namespace Snake
                 {
                     //мы проиграли
                     moveTimer.Stop();
-                    tbGameOver.Visibility = Visibility.Visible;
-                    return;
+                    if (score < 50)
+                    {
+                        tbGameOver.Visibility = Visibility.Visible;
+                        return;
+                    }
+                    second_life();
                 }
             }
 
@@ -94,8 +98,12 @@ namespace Snake
             {
                 //мы проиграли
                 moveTimer.Stop();
-                tbGameOver.Visibility = Visibility.Visible;
-                return;
+                if (score < 50)
+                {
+                    tbGameOver.Visibility = Visibility.Visible;
+                    return;
+                }
+                second_life();
             }
 
             //проверяем, что голова змеи врезалась в яблоко
@@ -112,6 +120,17 @@ namespace Snake
             }
             //перерисовываем экран
             UpdateField();
+        }
+
+        //если очков больше 50000
+        private void second_life()
+        {
+            score -= 50;
+            foreach (var p in snake)
+            {
+                p.move_back();
+            }
+            //head.image.Focus();
         }
 
         // Обработчик нажатия на кнопку клавиатуры
@@ -132,6 +151,7 @@ namespace Snake
                     head.direction = Head.Direction.RIGHT;
                     break;
             }
+            moveTimer.Start();
         }
 
         // Обработчик нажатия кнопки "Start"
@@ -145,7 +165,7 @@ namespace Snake
             canvas1.Children.Clear();
             // скрываем надпись "Game Over"
             tbGameOver.Visibility = Visibility.Hidden;
-            
+
             // добавляем поле на канвас
             canvas1.Children.Add(field.image);
             // создаем новое яблоко и добавлем его
@@ -155,18 +175,19 @@ namespace Snake
             head = new Head();
             snake.Add(head);
             canvas1.Children.Add(head.image);
-            
-            //запускаем таймер
-            moveTimer.Start();
-            UpdateField();
 
+            //запускаем таймер
+            UpdateField();
+            moveTimer.Start();
         }
-        
+
+
+
         public class Entity
         {
             protected int m_width;
             protected int m_height;
-            
+
             Image m_image;
             public Entity(int w, int h, string image)
             {
@@ -176,7 +197,6 @@ namespace Snake
                 m_image.Source = (new ImageSourceConverter()).ConvertFromString(image) as ImageSource;
                 m_image.Width = w;
                 m_image.Height = h;
-
             }
 
             public Image image
@@ -200,6 +220,7 @@ namespace Snake
             }
 
             public virtual void move() { }
+            public virtual void move_back() { }
 
             public int x
             {
@@ -268,7 +289,8 @@ namespace Snake
 
             Direction m_direction;
 
-            public Direction direction {
+            public Direction direction
+            {
                 set
                 {
                     m_direction = value;
@@ -298,6 +320,24 @@ namespace Snake
                         x -= 40;
                         break;
                     case Direction.RIGHT:
+                        x += 40;
+                        break;
+                }
+            }
+            public override void move_back()
+            {
+                switch (m_direction)
+                {
+                    case Direction.UP:
+                        y += 40;
+                        break;
+                    case Direction.DOWN:
+                        y -= 40;
+                        break;
+                    case Direction.RIGHT:
+                        x -= 40;
+                        break;
+                    case Direction.LEFT:
                         x += 40;
                         break;
                 }
